@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>History AutoDelete</title>
+	<link rel="stylesheet" href="../shared.css">
+</head>
+<body>
+	<main>
+		<h1>History AutoDelete</h1>
+		<p class="hint">Visits to these domains, and all of their subdomains, are removed from history as soon as they are recorded. Adding a domain also removes its existing history.</p>
+
+		<form id="add-form">
+			<input id="add-input" type="text" placeholder="example.com" autocomplete="off" spellcheck="false" aria-label="Domain to block">
+			<button type="submit">Block</button>
+		</form>
+		<p id="add-error" class="error" hidden></p>
+
+		<ul id="list"></ul>
+		<p id="empty" class="hint" hidden>No domains blocked yet.</p>
+
+		<section id="skipped" hidden>
+			<h2>Not migrated from 2.x</h2>
+			<p class="hint">These old rules matched paths or partial names and can't be turned into a domain without deleting more history than they did. Re-add the domain if you want it blocked.</p>
+			<ul id="skipped-list"></ul>
+			<button id="skipped-dismiss" type="button">Dismiss</button>
+		</section>
+
+		<details>
+			<summary>Import / export</summary>
+			<p class="hint">One domain per line. Saving replaces the whole list.</p>
+			<textarea id="bulk" rows="10" spellcheck="false"></textarea>
+			<button id="bulk-save" type="button">Save list</button>
+		</details>
+	</main>
+	<script type="module" src="options.js"></script>
+</body>
+</html>
