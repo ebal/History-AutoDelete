@@ -20,14 +20,46 @@ Keeps chosen domains out of your browser history. Add `x.com` to the blocklist a
 
 ## Installation
 
-Load it unpacked from a checkout:
+Download the package for your browser from the [Releases](https://github.com/ebal/History-AutoDelete/releases) page:
 
-- **Chrome / Brave:** open `chrome://extensions`, enable *Developer mode*, choose *Load unpacked* and select the `extension/` folder.
-- **Firefox / LibreWolf:** open `about:debugging#/runtime/this-firefox`, choose *Load Temporary Add-on* and select `extension/manifest.json`.
+- `History-AutoDelete_Chrome_X.Y.Z.zip` for Chrome, Brave and other Chromium browsers
+- `History-AutoDelete_Firefox_X.Y.Z.xpi` for Firefox and LibreWolf
 
-To build installable packages, run `docker compose run --rm build`. It runs the tests, then writes a Firefox `.xpi` and a Chrome `.zip` to `builds/`. Without Docker, `./tools/build.sh` does the packaging step if Node and `zip` are installed.
+These builds are not published in the browser stores, so each browser needs a few extra steps.
 
-The store listings below are for the original 2.x release:
+### Chrome / Brave
+
+1. Unzip `History-AutoDelete_Chrome_X.Y.Z.zip` into a folder you will keep, e.g. `~/extensions/history-autodelete`. The browser loads the extension from there, so don't delete it.
+2. Open `chrome://extensions` (in Brave, `brave://extensions`).
+3. Turn on **Developer mode** (top right).
+4. Click **Load unpacked** and select the folder from step 1.
+
+The extension stays installed after a restart. To update, unzip the new release over the same folder and click the reload icon on the extension's card.
+
+### LibreWolf / Firefox Developer Edition, Nightly or ESR
+
+These browsers can install unsigned add-ons permanently:
+
+1. Open `about:config`, accept the warning, and set `xpinstall.signatures.required` to `false`.
+2. Open `about:addons`, click the gear icon, choose **Install Add-on From File…** and select the `.xpi`. Dragging the `.xpi` onto a browser window works too.
+3. Approve the permission prompt.
+
+To update, install the newer `.xpi` the same way.
+
+### Firefox (release)
+
+Regular Firefox only installs add-ons signed by Mozilla and ignores `xpinstall.signatures.required`. Until a signed build is published, you can load it temporarily, and it is removed when Firefox restarts:
+
+1. Open `about:debugging#/runtime/this-firefox`.
+2. Click **Load Temporary Add-on…** and select the `.xpi`.
+
+### From source
+
+Build the packages yourself with `docker compose run --rm build`. It runs the tests, then writes the `.xpi` and `.zip` to `builds/`. Without Docker, `./tools/build.sh` does the packaging step if Node and `zip` are installed.
+
+For development, load the `extension/` folder directly: **Load unpacked** in Chrome, or **Load Temporary Add-on** with `extension/manifest.json` in Firefox.
+
+The store listings below are for the original 2.x release by the upstream author:
 [Chrome Web Store](https://chrome.google.com/webstore/detail/history-autodelete/bhfakmaiadhflpjloimlagikhodjiefj) ·
 [Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/history-autodelete)
 
