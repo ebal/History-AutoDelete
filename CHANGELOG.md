@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Block a domain together with all of its subdomains.
 - Purge a domain's existing history as soon as it is added, and sweep all history at browser startup.
+- Forget recently closed tabs and windows on blocked domains in Firefox and LibreWolf.
 - Block the current site from the toolbar popup, with an editable domain field.
 - Import and export the blocklist as plain text, one domain per line.
 - Migrate 2.x rules automatically, and list the ones that can't be converted on the options page.
@@ -21,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Move to Manifest V3; Chrome and Brave no longer load the Manifest V2 build.
 - Replace glob expressions with plain domains, so `x.com` no longer matches `x.computer.net`.
 - Rewrite the options page and popup in plain HTML and JavaScript, with dark mode support.
-- Reduce permissions to `history`, `storage` and `activeTab`.
+- Reduce permissions to `history`, `storage` and `activeTab`, plus `sessions` and `tabs` in Firefox to read and forget closed tabs.
 
 ### Removed
 - "Keep history for N days" setting.

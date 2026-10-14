@@ -30,7 +30,9 @@
   "permissions": [
     "activeTab",
     "history",
-    "storage"
+    "sessions",
+    "storage",
+    "tabs"
   ],
   "minimum_chrome_version": "121",
   "browser_specific_settings": {

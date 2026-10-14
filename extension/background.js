@@ -1,5 +1,6 @@
 import {BLOCKLIST_KEY, MIGRATION_SKIPPED_KEY, ext, getBlocklist, setBlocklist} from "./lib/storage.js";
 import {isBlockedUrl, migrateLegacyState, sanitizeList} from "./lib/domains.js";
+import {closedSessionsToForget} from "./lib/sessions.js";
 
 const PAGE_SIZE = 5000;
 
@@ -40,6 +41,24 @@ const purgeHistory = async (domains) => {
 	}
 };
 
+// Firefox/LibreWolf only: Chrome's sessions API has no way to forget an entry,
+// so there this is a no-op and "Recent tabs" keeps blocked pages.
+const canForgetSessions = typeof ext.sessions?.forgetClosedTab === "function";
+
+const purgeClosedSessions = async () => {
+	if (!canForgetSessions) {
+		return;
+	}
+	const domains = await loadBlocked();
+	if (domains.size === 0) {
+		return;
+	}
+	const actions = closedSessionsToForget(await ext.sessions.getRecentlyClosed(), domains);
+	await Promise.all(actions.map(({tab, window}) => (tab ?
+		ext.sessions.forgetClosedTab(tab.windowId, tab.sessionId) :
+		ext.sessions.forgetClosedWindow(window))));
+};
+
 const migrateFromV2 = async () => {
 	const {state, [BLOCKLIST_KEY]: existing} = await ext.storage.local.get(["state", BLOCKLIST_KEY]);
 	if (existing !== undefined || typeof state !== "string") {
@@ -50,7 +69,10 @@ const migrateFromV2 = async () => {
 	await ext.storage.local.set({[MIGRATION_SKIPPED_KEY]: skipped});
 };
 
-const purgeAll = async () => purgeHistory(await loadBlocked());
+const purgeAll = async () => {
+	await purgeHistory(await loadBlocked());
+	await purgeClosedSessions();
+};
 
 ext.history.onVisited.addListener(async ({url}) => {
 	if (isBlockedUrl(url, await loadBlocked())) {
@@ -66,7 +88,15 @@ ext.storage.onChanged.addListener((changes, area) => {
 	const previous = new Set(sanitizeList(changes[BLOCKLIST_KEY].oldValue));
 	blocked = Promise.resolve(next);
 	purgeHistory(new Set([...next].filter((domain) => !previous.has(domain)))).catch(console.error);
+	purgeClosedSessions().catch(console.error);
 });
+
+// Fires whenever a tab or window is closed (or one of ours is forgotten).
+if (canForgetSessions) {
+	ext.sessions.onChanged.addListener(() => {
+		purgeClosedSessions().catch(console.error);
+	});
+}
 
 ext.runtime.onInstalled.addListener(() => {
 	migrateFromV2().then(purgeAll).catch(console.error);
