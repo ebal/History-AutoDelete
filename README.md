@@ -6,6 +6,7 @@ Keeps chosen domains out of your browser history. Add `x.com` to the blocklist a
 
 - Block a domain and all of its subdomains (`x.com` covers `api.x.com`, not `x.community.org`)
 - Purge a domain's existing history when you add it, and sweep again at browser startup
+- Forget recently closed tabs and windows on a blocked domain (Firefox and LibreWolf)
 - Block the current site from the toolbar popup
 - Import and export the list as plain text, one domain per line
 - Manifest V3 with no third-party code
@@ -24,7 +25,7 @@ Load it unpacked from a checkout:
 - **Chrome / Brave:** open `chrome://extensions`, enable *Developer mode*, choose *Load unpacked* and select the `extension/` folder.
 - **Firefox / LibreWolf:** open `about:debugging#/runtime/this-firefox`, choose *Load Temporary Add-on* and select `extension/manifest.json`.
 
-To build installable packages, run `./tools/build.sh`. It writes a Firefox `.xpi` and a Chrome `.zip` to `builds/`.
+To build installable packages, run `docker compose run --rm build`. It runs the tests, then writes a Firefox `.xpi` and a Chrome `.zip` to `builds/`. Without Docker, `./tools/build.sh` does the packaging step if Node and `zip` are installed.
 
 The store listings below are for the original 2.x release:
 [Chrome Web Store](https://chrome.google.com/webstore/detail/history-autodelete/bhfakmaiadhflpjloimlagikhodjiefj) ·
@@ -40,7 +41,9 @@ You can enter a full URL, `www.example.com`, `*.example.com` or an international
 ## Limitations
 
 - Entries are deleted right after the browser records them, so a visit exists in history for a few milliseconds.
-- Recently closed tabs and the browser's session restore data are not touched.
+- Recently closed tabs and windows on a blocked domain are forgotten in Firefox and LibreWolf. A closed window is forgotten as a whole if any of its tabs is blocked. Chrome and Brave have no API for this, so blocked pages stay in their "Recent tabs" list until you clear browsing data.
+- Only a closed tab's current page is checked, so a blocked page further back in that tab's back/forward history is not detected.
+- Tabs synced from other devices and session restore data are not touched.
 - Private/incognito windows don't write history, so the extension has nothing to do there.
 
 ## Upgrading from 2.x
@@ -52,13 +55,30 @@ Version 3 replaces glob expressions with plain domains. Rules such as `x.com*` o
 ## Development
 
 ```sh
-node --test test/     # unit tests (Node 20+)
-./tools/build.sh      # Firefox and Chrome packages in builds/
+docker compose run --rm build   # tests + packages in Docker, nothing installed on the host
+node --test                     # unit tests (Node 20+)
+./tools/build.sh                # Firefox and Chrome packages in builds/ (needs node, zip)
 ```
 
 - `extension/lib/domains.js`: domain normalization and matching, no browser APIs, covered by the tests
 - `extension/background.js`: history listener, purge and 2.x migration
 - `extension/options/`, `extension/popup/`: UI in plain HTML and JS
+
+## Releasing
+
+Pushing a `v*` tag builds both packages and attaches them to a release on GitHub and on Gitea:
+
+1. Bump `version` in `extension/manifest.json` and `package.json`.
+2. Move the `[Unreleased]` entries in `CHANGELOG.md` into a new `## [X.Y.Z] - YYYY-MM-DD` section.
+3. Commit, then tag and push to both remotes:
+
+   ```sh
+   git tag vX.Y.Z
+   git push origin vX.Y.Z
+   git push gitea vX.Y.Z
+   ```
+
+Both workflows (`.github/workflows/release.yml`, `.gitea/workflows/release.yml`) run in the same `node` image as `docker-compose.yml`. They run the tests, check that the tag matches the manifest version, build, and publish the release with the matching `CHANGELOG.md` section as its notes. Gitea needs Actions enabled for the repository and a runner with the `ubuntu-latest` label that runs jobs in Docker.
 
 ## License
 

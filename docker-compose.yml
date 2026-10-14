@@ -1,0 +1,22 @@
+# One-shot build: runs the unit tests, then packages extension/ for Firefox
+# (.xpi) and Chrome (.zip) into ./builds.
+#
+#   docker compose run --rm build
+#
+# No healthcheck: this is a run-to-completion job, not a long-lived service.
+services:
+  build:
+    image: node:22.11.0-alpine3.20
+    working_dir: /src
+    volumes:
+      - .:/src:ro
+      - ./builds:/src/builds
+    command:
+      - sh
+      - -euc
+      - |
+        apk add --no-cache --quiet bash zip
+        node --test
+        ./tools/build.sh
+        # Hand the packages back to whoever owns the checkout, not root.
+        chown -R "$(stat -c %u:%g /src)" /src/builds

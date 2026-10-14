@@ -1,0 +1,39 @@
+# Builds the Firefox and Chrome packages when a v* tag is pushed and attaches
+# them to a GitHub release. Runs in the same image as docker-compose.yml.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    container: node:22.11.0-alpine3.20
+    steps:
+      - name: Install build tools
+        run: apk add --no-cache bash git zip github-cli
+
+      - uses: actions/checkout@v4
+
+      - name: Test
+        run: node --test
+
+      - name: Check version and extract release notes
+        run: ./tools/release-notes.sh "$GITHUB_REF_NAME" > /tmp/notes.md
+
+      - name: Build
+        run: ./tools/build.sh
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          gh release create "$GITHUB_REF_NAME" builds/*
+          --repo "$GITHUB_REPOSITORY"
+          --title "$GITHUB_REF_NAME"
+          --notes-file /tmp/notes.md
+          --verify-tag
