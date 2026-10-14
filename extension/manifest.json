@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "History AutoDelete",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "Keeps chosen domains and their subdomains out of your browser history.",
   "homepage_url": "https://github.com/mrdokenny/History-AutoDelete",
   "icons": {

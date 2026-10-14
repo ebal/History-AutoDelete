@@ -1,6 +1,6 @@
 {
   "name": "history-autodelete",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "Keeps chosen domains and their subdomains out of your browser history.",
   "type": "module",
   "private": true,
